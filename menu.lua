@@ -6,6 +6,7 @@
 
 local composer = require( "composer" )
 local scene = composer.newScene()
+local gameNetwork = require("gameNetwork")
 
 -- include Corona's "widget" library
 local widget = require "widget"
@@ -14,12 +15,43 @@ local widget = require "widget"
 
 -- forward declarations and other locals
 local playBtn
+math.randomseed(os.date("%j"))
+
+local ads = require "plugin.inMobi"
+local appID = "263e6b566523449f8a3f934233bedfe1"
+if ( system.getInfo( "platformName" ) == "Android" ) then
+    appID = "263e6b566523449f8a3f934233bedfe1"
+end
+ 
+local adProvider = "inMobi"
+function adListener( event )
+    if ( event.isError ) then
+        -- Failed to receive an ad
+    else
+        ads.show( "1470891557110" )
+    end
+
+end
+ads.init(adListener,{accountId=appID} )
+ads.load( "interstitial", "1470891557110")
 
 -- 'onRelease' event listener for playBtn
 local function onPlayBtnRelease()
 	
 	-- go to level1.lua scene
-	composer.gotoScene( "level1", "fade", 500 )
+	local options =
+	{
+	    effect = "fade",
+	    time = 400,
+	}
+	composer.gotoScene( "level1", options)
+	
+	return true	-- indicates successful touch
+end
+
+local function instructionsLtn()
+	
+	native.showAlert( "Controls", "Touch the left or right side of the screen.")
 	
 	return true	-- indicates successful touch
 end
@@ -33,32 +65,45 @@ function scene:create( event )
 	-- e.g. add display objects to 'sceneGroup', add touch listeners, etc.
 
 	-- display a background image
-	local background = display.newRect(0,0, display.contentWidth, display.contentHeight)
-	background.anchorX = 0
-	background.anchorY = 0
-	background:setFillColor(.5)
+	local backgroundImg = {type="image", filename="background.png"}
+
+	local background = display.newGroup()
+
+	local graphics = display.newRect(0,0, display.contentWidth, display.contentHeight)
+	graphics.anchorX = 0
+	graphics.anchorY = 0
+	graphics.fill = backgroundImg
+
+	local backgroundColor = display.newRect(display.contentWidth/2, display.contentHeight/2, display.contentWidth, display.contentHeight)
+	backgroundColor:setFillColor(math.random(), math.random(), math.random(), .5)
+
+	background:insert(backgroundColor)
+	background:insert(graphics)
 	
-	-- create/position logo/title image on upper-half of the screen
-	local titleLogo = display.newImageRect( "logo.png", 264, 42 )
-	titleLogo.x = display.contentWidth * 0.5
-	titleLogo.y = 100
-	
-	-- create a widget button (which will loads level1.lua on release)
-	playBtn = widget.newButton{
-		label="Play Now",
-		labelColor = { default={255}, over={128} },
-		default="button.png",
-		over="button-over.png",
-		width=154, height=40,
-		onRelease = onPlayBtnRelease	-- event listener function
-	}
-	playBtn.x = display.contentWidth*0.5
-	playBtn.y = display.contentHeight - 125
+
+	local playBtn = display.newRect(display.contentWidth/2, display.contentHeight - 140,220,32)
+	playBtn:setFillColor(0,0,0,0.01)
+	playBtn:addEventListener("touch", onPlayBtnRelease)
+
+	local function showAchievements( event )
+	   gameNetwork.show( "leaderboards" )
+	   return true
+	end
+
+	local showLeaderBoard = display.newRect(display.contentWidth/2, display.contentHeight - 100,220,32)
+	showLeaderBoard:setFillColor(0,0,0,0.01)
+	showLeaderBoard:addEventListener("touch", showAchievements)
+
+	local instructions = display.newRect(display.contentWidth/2, display.contentHeight - 60,220,32)
+	instructions:setFillColor(0,0,0,0.01)
+	instructions:addEventListener("touch", instructionsLtn)
+
 	
 	-- all display objects must be inserted into group
 	sceneGroup:insert( background )
-	sceneGroup:insert( titleLogo )
 	sceneGroup:insert( playBtn )
+	sceneGroup:insert(showLeaderBoard)
+	sceneGroup:insert(instructions)
 end
 
 function scene:show( event )

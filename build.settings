@@ -5,7 +5,26 @@
 
 settings =
 {
-	
+	plugins =
+	{
+	   ["CoronaProvider.gameNetwork.google"] =
+	   {
+	      publisherId = "com.coronalabs", 
+	      supportedPlatforms = {iphone=true, android=true}
+	   },
+
+	   ["plugin.google.play.services"] =
+       {
+          publisherId = "com.coronalabs",
+          supportedPlatforms = {android=true}
+       },
+       ["plugin.inMobi"] =
+        {
+            publisherId = "com.coronalabs",
+            supportedPlatforms = { iphone=true, android=true }
+        },
+	},
+
 	orientation =
 	{
 		-- Supported values for orientation:
@@ -77,6 +96,8 @@ settings =
 		usesPermissions =
 		{
 			"android.permission.INTERNET",
+            "android.permission.ACCESS_NETWORK_STATE",
 		},
-	},
+		googlePlayGamesAppId = "941184152951"
+	}
 }

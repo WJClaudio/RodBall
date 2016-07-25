@@ -5,9 +5,11 @@
 -----------------------------------------------------------------------------------------
 
 local composer = require( "composer" )
+local gameNetwork = require( "gameNetwork" )
 local scene = composer.newScene()
 local gameUI = require("gameUI")
 local physics = require "physics"
+local widget = require "widget"
 
 local background
 local ball 
@@ -163,6 +165,7 @@ function scene:create( event )
 	walls = display.newGroup()
 	local leftWall = display.newRect(walls, 0, halfH, 16, screenH*2)
 	leftWall.myName = "leftWall"
+	leftWall:setFillColor(2,0,0, .0)
 	local rightWall = display.newRect(walls, screenW+1, halfH, 16, screenH*2)
 	rightWall.myName = "rightWall"
 	rightWall:setFillColor(2,0,0)
@@ -225,11 +228,11 @@ function scene:create( event )
 	        	if (targetWall == "rightWall") then
 	        		targetWall = "leftWall"
 	        		leftWall:setFillColor(unpack(aColor))
-	        		rightWall:setFillColor(unpack(bColor))
+	        		rightWall:setFillColor(unpack(bColor), .01)
 	        	elseif (targetWall == "leftWall") then
 	        		targetWall = "rightWall"
 	        		rightWall:setFillColor(unpack(aColor))
-	        		leftWall:setFillColor(unpack(bColor))
+	        		leftWall:setFillColor(unpack(bColor), .01)
 	        	end
 	        	points = points + 1
 	        	pointsCounter = pointsCounter + 1
@@ -385,7 +388,26 @@ function scene:create( event )
 	-- End of health
 
 	function lose()
+		local myCategory
 		if (healthCounter < 1 or ballGroup.y > screenH) then
+
+			function postScoreSubmit( event )
+			   --whatever code you need following a score submission...
+			   print("this worked!")
+			   return true
+			end
+
+			if ( system.getInfo( "platformName" ) == "Android" ) then
+			   --for GPGS, reset "myCategory" to the string provided from the leaderboard setup in Google
+			   myCategory = "CgkI9-rJl7IbEAIQCw"
+			end
+			 
+			gameNetwork.request( "setHighScore",
+			{
+			   localPlayerScore = { category=myCategory, value=tonumber(points) },
+			   listener = postScoreSubmit
+			})
+
 			Runtime:removeEventListener("enterFrame", colorSaviorRodBall)
 			Runtime:removeEventListener("enterFrame", moveSaviorRod)
 			saviorRodOnScreen = false
